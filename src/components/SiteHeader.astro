@@ -1,0 +1,21 @@
+---
+import { profile } from '../data/profile';
+
+// On the home page the section links are plain fragments; elsewhere they
+// point back to the home page.
+const base = Astro.url.pathname === '/' ? '' : '/';
+---
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="/">{profile.name}</a>
+    <nav aria-label="Sections">
+      <a href={`${base}#work`}>Work</a>
+      <a href={`${base}#research`}>Research</a>
+      <a href={`${base}#writing`}>Writing</a>
+      <a href={`${base}#projects`}>Projects</a>
+      <a href={profile.links.resume}>Resume</a>
+      <a href={`${base}#contact`}>Contact</a>
+    </nav>
+  </div>
+</header>

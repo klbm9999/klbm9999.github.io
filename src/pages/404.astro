@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { profile } from '../data/profile';
+---
+
+<Base title={`Page not found - ${profile.name}`} description="This page does not exist." noindex>
+  <SiteHeader />
+  <main id="main" class="wrap">
+    <div class="hero">
+      <h1>Page not found</h1>
+      <p class="lede">There is nothing at this address. The <a href="/">home page</a> has everything on this site.</p>
+    </div>
+  </main>
+  <SiteFooter />
+</Base>
