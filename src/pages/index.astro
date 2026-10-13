@@ -1,0 +1,186 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { profile } from '../data/profile';
+import { availabilityLine, employmentLine } from '../lib/format';
+
+const byOrder = (a: { data: { order: number } }, b: { data: { order: number } }) => a.data.order - b.data.order;
+
+const work = await Promise.all(
+  (await getCollection('work')).sort(byOrder).map(async (entry) => ({ entry, ...(await render(entry)) })),
+);
+const papers = (await getCollection('papers')).sort(byOrder);
+const featured = await Promise.all(
+  papers.filter((p) => p.data.featured).map(async (entry) => ({ entry, ...(await render(entry)) })),
+);
+const otherPapers = papers.filter((p) => !p.data.featured);
+const projects = (await getCollection('projects', (p) => p.data.visible)).sort(byOrder);
+const posts = (await getCollection('writing')).sort(byOrder);
+
+const { research, education } = profile;
+const description = `${profile.headline} ${profile.name}, ${profile.location}.`;
+---
+
+<Base title={profile.name} description={description}>
+  <SiteHeader />
+  <main id="main" class="wrap">
+    <div class="hero">
+      <h1>{profile.headline}</h1>
+      <p class="lede">
+        I build vision models and the systems that ship them: data pipelines, APIs and cloud infrastructure.{' '}
+        {profile.yearsOfExperience} years of applied ML across graduate research and industry.
+      </p>
+      <p class="meta">{availabilityLine()}</p>
+      <ul class="cta" aria-label="Contact and profiles">
+        <li><a class="primary" href={`mailto:${profile.email}`}>Email me</a></li>
+        <li><a href={profile.links.resume}>Resume (PDF)</a></li>
+        <li><a href={profile.links.github}>GitHub</a></li>
+        <li><a href={profile.links.scholar}>Google Scholar</a></li>
+        <li><a href={profile.links.linkedin}>LinkedIn</a></li>
+      </ul>
+      <p class="print-contact">
+        {profile.email} · {Astro.site?.host} · {profile.links.github.replace('https://', '')}
+      </p>
+    </div>
+
+    <section id="work" aria-labelledby="work-title">
+      <h2 id="work-title">Selected work</h2>
+      <div class="work">
+        {
+          work.map(({ entry, Content }) => (
+            <article>
+              <h3>{entry.data.title}</h3>
+              {entry.data.showDates && <p class="when">{employmentLine()}</p>}
+              <div class="prose">
+                <Content />
+              </div>
+              {entry.data.tags.length > 0 && (
+                <ul class="tags" aria-label="Tools and models">
+                  {entry.data.tags.map((tag) => (
+                    <li>{tag}</li>
+                  ))}
+                </ul>
+              )}
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section id="research" aria-labelledby="research-title">
+      <h2 id="research-title">Research</h2>
+      {
+        featured.map(({ entry, Content }) => (
+          <article class="pub">
+            {entry.data.thumbnail && entry.data.links.video && (
+              <a class="thumb" href={entry.data.links.video}>
+                <Image
+                  src={entry.data.thumbnail}
+                  alt={entry.data.thumbnailAlt ?? ''}
+                  widths={[336, 672, 1000]}
+                  sizes="(max-width: 640px) calc(100vw - 32px), 168px"
+                />
+                <span class="play">
+                  <span class="play-icon" aria-hidden="true" />
+                  Watch demo
+                </span>
+              </a>
+            )}
+            <div>
+              <h3>{entry.data.title}</h3>
+              <p class="venue">
+                {entry.data.venue} {entry.data.year} · {entry.data.authors}
+              </p>
+              <div class="prose">
+                <Content />
+              </div>
+              <p class="pub-links">
+                <a class="print-url" href={entry.data.links.paper}>Paper</a>
+                {entry.data.links.video && (
+                  <>
+                    {' · '}
+                    <a class="print-url" href={entry.data.links.video}>Demo video</a>
+                  </>
+                )}
+                {' · '}
+                <a href={profile.links.scholar}>Google Scholar</a>
+              </p>
+            </div>
+          </article>
+        ))
+      }
+      <ul class="research-list">
+        {
+          otherPapers.map((paper) => (
+            <li>
+              <a class="print-url" href={paper.data.links.paper}>
+                <b>{paper.data.title}</b>
+              </a>{' '}
+              · {paper.data.venue} {paper.data.year}
+            </li>
+          ))
+        }
+        <li>
+          Research at {research.lab}, {research.start}-{research.end}: {research.areas}.
+        </li>
+        <li>{research.fellowship.name}, {research.fellowship.year}.</li>
+      </ul>
+    </section>
+
+    <section id="writing" aria-labelledby="writing-title">
+      <h2 id="writing-title">Writing</h2>
+      <ul class="posts">
+        {
+          posts.map((post) => (
+            <li>
+              <h3>
+                {post.data.status === 'published' ? (
+                  <a href={`/writing/${post.id}/`}>{post.data.title}</a>
+                ) : (
+                  <>
+                    <span class="post-title">{post.data.title}</span>
+                    <span class="soon">Coming soon</span>
+                  </>
+                )}
+              </h3>
+              <p>{post.data.teaser}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section id="projects" aria-labelledby="projects-title">
+      <h2 id="projects-title">Projects</h2>
+      <ul class="projects">
+        {
+          projects.map((project) => (
+            <li class="card">
+              <h3>
+                <a class="print-url" href={project.data.repo}>
+                  {project.data.name}
+                </a>
+              </h3>
+              <p>{project.data.description}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section id="background" aria-labelledby="background-title">
+      <h2 id="background-title">Background</h2>
+      <p>{education.degree}, {education.school}, {education.start}-{education.end}.</p>
+      <p class="skills">{profile.skills.join(' · ')}</p>
+    </section>
+
+    <section id="contact" aria-labelledby="contact-title">
+      <h2 id="contact-title">Contact</h2>
+      <p>The fastest way to reach me is email: <a href={`mailto:${profile.email}`}>{profile.email}</a>.</p>
+    </section>
+  </main>
+  <SiteFooter />
+</Base>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://klbm9999.github.io/sitemap-index.xml
